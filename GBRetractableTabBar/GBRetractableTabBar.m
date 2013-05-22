@@ -6,19 +6,26 @@
 //  Copyright (c) 2013 Goonbee. All rights reserved.
 //
 
-//foo manage active state of control views:
-//when hes added hes deactived (if he was active before)
-//when the activeindex changes:
-    //controlview activity is updated
-    //content views are managed (their lifecycle, and their presence)
-
 #import "GBRetractableTabBar.h"
-#import "GBRetractableTabBarViewProtocol.h"
 
 #import "GBToolbox.h"
 
-static NSUInteger const kGBRetractableTabBarUndefinedIndex =    NSUIntegerMax;
-static CGFloat const kGBRetractableBarAnimationDuration =       2;
+@interface UIViewController ()
+
+@property (weak, nonatomic, readwrite) GBRetractableTabBar      *retractableTabBar;
+
+@end
+
+@implementation UIViewController (GBRetractableTabBar)
+
+_associatedObject(weak, nonatomic, GBRetractableTabBar *, retractableTabBar, setRetractableTabBar)
+
+@end
+
+
+NSUInteger const kGBRetractableTabBarUndefinedIndex =           NSUIntegerMax;
+
+static CGFloat const kGBRetractableBarAnimationDuration =       0.3;
 
 @interface GBRetractableTabBar () {
     UIView                                                      *_barBackgroundView;
@@ -65,7 +72,6 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
         _contentView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
         [self.view addSubview:_contentView];
         [self.view sendSubviewToBack:_contentView];
-        _contentView.backgroundColor = [[UIColor grayColor] colorWithAlphaComponent:0.5];//foo testing
     }
     
     return _contentView;
@@ -88,7 +94,6 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
         
         [self.view addSubview:_barView];
         [self.view bringSubviewToFront:_barView];
-        _barView.backgroundColor = [[UIColor redColor] colorWithAlphaComponent:0.5];//foo testing
     }
     
     return _barView;
@@ -106,7 +111,7 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
         _controlViewsContainer.clipsToBounds = NO;
         
         
-        _controlViewsContainer.backgroundColor = [[UIColor blueColor] colorWithAlphaComponent:0.5];//foo testing
+        _controlViewsContainer.backgroundColor = [UIColor clearColor];
     }
     
     return _controlViewsContainer;
@@ -159,48 +164,30 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
     }
 }
 
-#pragma mark - Public API: Init
+#pragma mark - Init
 
 -(id)initWithTabBarHeight:(CGFloat)tabBarHeight {
     if (self = [super init]) {
         self.barHeight = tabBarHeight;
-        
-        [self basicInitRoutine];
+        self.myActiveIndex = kGBRetractableTabBarUndefinedIndex;
+        _isShowing = YES;
     }
     
     return self;
 }
 
 -(id)init {
-    if (self = [super init]) {
-        [self basicInitRoutine];
-    }
-    
-    return self;
+    return [self initWithTabBarHeight:50];
 }
 
--(id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil {
-    @throw [NSException exceptionWithName:GBUnexpectedMessageException reason:@"GBRetractableTabBar: unsupported init method, use initWithTabBarHeight: or init:" userInfo:nil];
-}
-
--(id)initWithCoder:(NSCoder *)aDecoder {
-    @throw [NSException exceptionWithName:GBUnexpectedMessageException reason:@"GBRetractableTabBar: unsupported init method, use initWithTabBarHeight: or init:" userInfo:nil];
-}
-
-#pragma mark - Private API: Init
-
--(void)basicInitRoutine {
-    self.myActiveIndex = kGBRetractableTabBarUndefinedIndex;
-}
-
-#pragma mark - Public API: External control
+#pragma mark - External control
 
 //Programatically set which viewController/controlView pair is active
 -(void)setActiveIndex:(NSUInteger)index {
     self.myActiveIndex = index;
 }
 
-#pragma mark - Public API: Control Views
+#pragma mark - Control Views
 
 -(void)addControlView:(UIView<GBRetractableTabBarView> *)view {
     [self setControlView:view forIndex:self.myControlViews.count];
@@ -218,6 +205,9 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
     
     //arrange the control views inside the tab bar
     [self _arrangeControlViews];
+    
+    //activate him?
+    [self _happyActiveTrigger];
 }
 
 -(void)removeControlViewAtIndex:(NSUInteger)index {
@@ -262,11 +252,12 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
     //only if there's anything to add
     if (controlViews.count > 0) {
         //now calculate the spacing, can be negative doesn't matter
-        CGFloat totalWidth = [[controlViews reduce:^id(id objectA, id objectB) {
-            return @(((UIView *)objectA).frame.size.width + ((UIView *)objectB).frame.size.width);
-        } lastObject:nil] floatValue];
-        
-        CGFloat collapsibleHorizontalMargin = totalWidth / controlViews.count;
+        __block CGFloat totalWidth = 0;
+        [controlViews enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+            totalWidth += ((UIView *)obj).frame.size.width;
+        }];
+                
+        CGFloat collapsibleHorizontalMargin = totalWidth / (controlViews.count + 1);
         
         //set the frames and add them to the container
         __block CGFloat howFar = 0;
@@ -291,7 +282,7 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
 
 -(void)_activateCorrectControlView {
     //prep
-    UIView<GBRetractableTabBarView> *currentlyActiveView = self.controlViews[self.myActiveIndex];
+    UIView<GBRetractableTabBarView> *currentlyActiveView = (self.myActiveIndex != kGBRetractableTabBarUndefinedIndex) ? self.controlViews[self.myActiveIndex] : nil;
     
     //if the target is already active then we're done
     if (!currentlyActiveView.isActive) {
@@ -315,9 +306,19 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
     }
 }
 
-#pragma mark - Public API: View Controllers
+#pragma mark - View Controllers
+
+-(void)setViewController:(UIViewController *)viewController {
+    [self setViewController:viewController forIndex:self.myViewControllers.count];
+}
 
 -(void)setViewController:(UIViewController *)viewController forIndex:(NSUInteger)index {
+    //make sure he knows who we are
+    viewController.retractableTabBar = self;
+    
+    //if we're gonna replace someone, this is a good time to say goodbye
+    if (self.viewControllers.count > index && self.viewControllers[index]) ((UIViewController *)self.viewControllers[index]).retractableTabBar = nil;
+    
     //make sure the array has enough space
     [self.myViewControllers padToIndex:index];
     
@@ -326,6 +327,9 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
     
     //sort out the drawing, vc lifecycle, etc.
     [self _sortOutViewControllers];
+    
+    //activate him?
+    [self _happyActiveTrigger];
 }
 
 -(NSArray *)viewControllers {
@@ -338,8 +342,7 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
 
 -(void)_sortOutViewControllers {
     //N.B. active index and myViewControllers are the sources of truth, activeViewController is just so we can detect when he's been swapped out
-    
-    UIViewController *newActiveViewController = self.myViewControllers[self.myActiveIndex];
+    UIViewController *newActiveViewController = (self.myActiveIndex != kGBRetractableTabBarUndefinedIndex) ? self.myViewControllers[self.myActiveIndex] : nil;
     
     //check if we have a change
     if (newActiveViewController != self.activeViewController) {
@@ -355,25 +358,28 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
 }
 
 -(void)hideViewController:(UIViewController *)viewController {
-    //foo what about viewdidload and viewdidunload... make sure they're called... and make sure these arent called twice
-    [viewController viewWillDisappear:NO];
-    
-    [viewController.view removeFromSuperview];
-    
-    [viewController viewDidDisappear:NO];
+    if (viewController) {
+        [viewController viewWillDisappear:NO];
+        
+        [viewController.view removeFromSuperview];
+        
+        [viewController viewDidDisappear:NO];
+    }
 }
 
 -(void)showViewController:(UIViewController *)viewController {
-    [viewController viewWillAppear:NO];
-    
-    viewController.view.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
-    viewController.view.frame = self.contentView.bounds;
-    [self.contentView addSubview:viewController.view];
-    
-    [viewController viewDidAppear:YES];
+    if (viewController) {
+        [viewController viewWillAppear:NO];
+        
+        viewController.view.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
+        viewController.view.frame = self.contentView.bounds;
+        [self.contentView addSubview:viewController.view];
+        
+        [viewController viewDidAppear:YES];
+    }
 }
 
-#pragma mark - Public API: Tab bar height
+#pragma mark - Tab bar height
 
 -(void)setBarHeight:(CGFloat)tabBarHeight {
     _barHeight = tabBarHeight;
@@ -404,9 +410,9 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
     }
 }
 
-#pragma mark - Public API: Background
+#pragma mark - Background
 
--(void)setBarBackgroundView:(UIView *)barBackgroundView {//foo check this to make sure it works
+-(void)setBarBackgroundView:(UIView *)barBackgroundView {
     //remove old bgview
     [_barBackgroundView removeFromSuperview];
     
@@ -414,7 +420,7 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
     _barBackgroundView = barBackgroundView;
     
     //make sure the tab bar is configured
-    [self _configureBar];//foo not so sure
+    [self _configureBar];
     
     //configure the new one
     [self _configureBarBackgroundView];
@@ -459,7 +465,7 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
     }
 }
 
-#pragma mark - Public API: Retracting
+#pragma mark - Retracting
 
 -(void)setIsShowing:(BOOL)isShowing {
     [self show:isShowing animated:NO];
@@ -484,10 +490,10 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
         }
         else {
             //contentview goes down
-            contentViewTargetFrame = CGRectMake(0, 0, self.view.bounds.size.width, self.view.bounds.size.height - self.barHeight);
+            contentViewTargetFrame = CGRectMake(0, 0, self.view.bounds.size.width, self.view.bounds.size.height);
             
             //barview goes down
-            barViewTargetFrame = CGRectMake(0, self.view.bounds.size.height - self.barHeight, self.view.bounds.size.width, self.barHeight);
+            barViewTargetFrame = CGRectMake(0, self.view.bounds.size.height, self.view.bounds.size.width, self.barHeight);
         }
         
         //property changes
@@ -529,7 +535,7 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
     }
 }
 
-#pragma mark - tap gesture recognizer
+#pragma mark - Tap gesture recognizer
 
 -(void)tapped:(UITapGestureRecognizer *)gestureRecognizer {
     if (gestureRecognizer.state == UIGestureRecognizerStateEnded) {
@@ -545,6 +551,27 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
                 self.myActiveIndex = idx;
                 
                 //dont look further
+                *stop = YES;
+            }
+        }];
+    }
+}
+
+#pragma mark - Happy active trigger
+
+//This is called when a controlView or viewController is added. If the active index is undefined, he activated the first index for which he gets both a controlview and a contentview
+-(void)_happyActiveTrigger {
+    if (self.myActiveIndex == kGBRetractableTabBarUndefinedIndex) {
+        //enumerate the controlviews, and find the first corresponding contentview
+        [self.controlViews enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+            //if we don't have a corresponding vc, then we're done
+            if (idx >= self.viewControllers.count) *stop = YES;
+            
+            UIView *controlView = obj;
+            UIViewController *viewController = self.viewControllers[idx];
+            
+            if (controlView && viewController) {
+                self.myActiveIndex = idx;
                 *stop = YES;
             }
         }];

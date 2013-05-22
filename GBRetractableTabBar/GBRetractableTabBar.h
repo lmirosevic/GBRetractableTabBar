@@ -9,6 +9,18 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
+#import "GBRetractableTabBarViewProtocol.h"
+
+extern NSUInteger const kGBRetractableTabBarUndefinedIndex;
+
+@class GBRetractableTabBar;
+
+@interface UIViewController (GBRetractableTabBar)
+
+@property (weak, nonatomic, readonly) GBRetractableTabBar       *retractableTabBar;
+
+@end
+
 @protocol GBRetractableTabBarView;
 @protocol GBRetractableTabBarDelegate;
 
@@ -49,6 +61,9 @@
 -(NSArray *)controlViews;
 
 #pragma mark - View Controllers
+
+//Just adds him to the end
+-(void)setViewController:(UIViewController *)viewController;
 
 //Sets the view controller, releases the old one if there was one (and removes his view from the tab bar controller if he was active), if this is the active index, he immediately shows him
 -(void)setViewController:(UIViewController *)viewController forIndex:(NSUInteger)index;
