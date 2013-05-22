@@ -14,14 +14,21 @@
 
 @interface GBRetractableTabBar : UIViewController
 
-@property (assign, nonatomic) CGFloat   barHeight;
-@property (strong, nonatomic) UIView    *barBackgroundView;
-@property (strong, nonatomic) UIImage   *barBackgroundImage;
+@property (weak, nonatomic) id<GBRetractableTabBarDelegate>     delegate;
+@property (assign, nonatomic) CGFloat                           barHeight;
+@property (strong, nonatomic) UIView                            *barBackgroundView;
+@property (strong, nonatomic) UIImage                           *barBackgroundImage;
+@property (assign, nonatomic) BOOL                              isShowing;
 
 #pragma mark - Init
 
 //Designated initialiser
 -(id)initWithTabBarHeight:(CGFloat)tabBarHeight;
+
+#pragma mark - External control
+
+//Programatically set which viewController/controlView pair is active
+-(void)setActiveIndex:(NSUInteger)index;
 
 #pragma mark - Control Views
 //Views added must all conform to the protocol but can be any subclass of UIView. Make sure they don't handle events in the responder chain, so that these may bubble down to the tab bar
@@ -30,13 +37,16 @@
 -(void)addControlView:(UIView<GBRetractableTabBarView> *)view;
 
 //Places a view at a specific position. You can set arbitrary indexes at arbitrary orders and it will work itself out. It doesn't follow NSArray semantics where you can only add to the end.
--(void)insertControlView:(UIView<GBRetractableTabBarView> *)view atIndex:(NSUInteger)index;
+-(void)setControlView:(UIView<GBRetractableTabBarView> *)view forIndex:(NSUInteger)index;
 
 //Removes a view, if it leaves a sparse list, no prob
 -(void)removeControlViewAtIndex:(NSUInteger)index;
 
 //Removes all views
 -(void)removeAllControlViews;
+
+//Return them as an array
+-(NSArray *)controlViews;
 
 #pragma mark - View Controllers
 
@@ -82,5 +92,12 @@
 
 //Called when a view controller is replaced, essentially combines the above two for when you need to know them both within the same context
 -(void)tabBar:(GBRetractableTabBar *)tabBar didReplaceViewControllerWithOldIndex:(NSUInteger)oldIndex oldViewController:(UIViewController *)oldViewController withViewControllerWithNewIndex:(NSUInteger)newIndex newViewController:(UIViewController *)newViewController;
+
+//When you just want to know the new active index
+-(void)tabBar:(GBRetractableTabBar *)tabBar didChangeActiveIndexFromOldIndex:(NSUInteger)oldIndex toNewIndex:(NSUInteger)newIndex;
+
+//Lets you know when the tab bar was hidden/shown
+-(void)tabBarDidHideTabBar:(GBRetractableTabBar *)tabBar animated:(BOOL)animated;
+-(void)tabBarDidShowTabBar:(GBRetractableTabBar *)tabBar animated:(BOOL)animated;
 
 @end
