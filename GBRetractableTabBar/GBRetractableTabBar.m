@@ -134,33 +134,31 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
         
         
         //fist handle the internal stuff
-        
-        //view controllers
-        [self _sortOutViewControllers];
-        
-        //control views
-        [self _activateCorrectControlView];
+            //view controllers
+            [self _sortOutViewControllers];
+            
+            //control views
+            [self _activateCorrectControlView];
         
         
         //now tell our delegate what happenend
-        
-        //index
-        if ([self.delegate respondsToSelector:@selector(tabBar:didChangeActiveIndexFromOldIndex:toNewIndex:)]) {
-            [self.delegate tabBar:self didChangeActiveIndexFromOldIndex:oldIndex toNewIndex:newIndex];
-        }
-        
-        //view controllers
-        if ([self.delegate respondsToSelector:@selector(tabBar:didHideViewControllerWithIndex:viewController:)]) {
-            [self.delegate tabBar:self didHideViewControllerWithIndex:oldIndex viewController:oldViewController];
-        }
-        if ([self.delegate respondsToSelector:@selector(tabBar:didShowViewControllerWithIndex:viewController:)]) {
-            [self.delegate tabBar:self didShowViewControllerWithIndex:newIndex viewController:self.activeViewController];
-        }
-        
-        //joint
-        if ([self.delegate respondsToSelector:@selector(tabBar:didReplaceViewControllerWithOldIndex:oldViewController:withViewControllerWithNewIndex:newViewController:)]) {
-            [self.delegate tabBar:self didReplaceViewControllerWithOldIndex:oldIndex oldViewController:oldViewController withViewControllerWithNewIndex:newIndex newViewController:self.activeViewController];
-        }
+            //index
+            if ([self.delegate respondsToSelector:@selector(tabBar:didChangeActiveIndexFromOldIndex:toNewIndex:)]) {
+                [self.delegate tabBar:self didChangeActiveIndexFromOldIndex:oldIndex toNewIndex:newIndex];
+            }
+            
+            //view controllers
+            if ([self.delegate respondsToSelector:@selector(tabBar:didHideViewControllerWithIndex:viewController:)]) {
+                [self.delegate tabBar:self didHideViewControllerWithIndex:oldIndex viewController:oldViewController];
+            }
+            if ([self.delegate respondsToSelector:@selector(tabBar:didShowViewControllerWithIndex:viewController:)]) {
+                [self.delegate tabBar:self didShowViewControllerWithIndex:newIndex viewController:self.activeViewController];
+            }
+            
+            //joint
+            if ([self.delegate respondsToSelector:@selector(tabBar:didReplaceViewControllerWithOldIndex:oldViewController:withViewControllerWithNewIndex:newViewController:)]) {
+                [self.delegate tabBar:self didReplaceViewControllerWithOldIndex:oldIndex oldViewController:oldViewController withViewControllerWithNewIndex:newIndex newViewController:self.activeViewController];
+            }
     }
 }
 
@@ -555,18 +553,19 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
 -(void)_happyActiveTrigger {
     if (self.myActiveIndex == kGBRetractableTabBarUndefinedIndex) {
         //enumerate the controlviews, and find the first corresponding contentview
-        [self.controlViews enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+        for (NSUInteger i=0; i<self.myControlViews.count; i++) {
             //if we don't have a corresponding vc, then we're done
-            if (idx >= self.viewControllers.count) *stop = YES;
+            if (i >= self.myViewControllers.count) break;
             
-            UIView *controlView = obj;
-            UIViewController *viewController = self.viewControllers[idx];
+            UIView *controlView = self.myControlViews[i];
+            UIViewController *viewController = self.myViewControllers[i];
             
-            if (controlView && viewController) {
-                self.myActiveIndex = idx;
-                *stop = YES;
+            if ([controlView isKindOfClass:[UIView class]] && [viewController isKindOfClass:[UIViewController class]]) {
+                self.myActiveIndex = i;
+                break;
             }
-        }];
+            
+        }
     }
 }
 
