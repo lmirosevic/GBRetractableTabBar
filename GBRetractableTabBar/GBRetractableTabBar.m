@@ -12,7 +12,7 @@
 
 @interface UIViewController ()
 
-@property (weak, nonatomic, readwrite) GBRetractableTabBar      *retractableTabBar;
+@property (weak, nonatomic, readwrite) GBRetractableTabBar                              *retractableTabBar;
 
 @end
 
@@ -23,27 +23,28 @@ _associatedObject(weak, nonatomic, GBRetractableTabBar *, retractableTabBar, set
 @end
 
 
-NSUInteger const kGBRetractableTabBarUndefinedIndex =           NSUIntegerMax;
+NSUInteger const kGBRetractableTabBarUndefinedIndex =                                   NSUIntegerMax;
 
-static CGFloat const kGBRetractableBarAnimationDuration =       0.3;
+static CGFloat const kGBRetractableBarAnimationDuration =                               0.3;
+static GBRetractableTabBarLayoutStyle const kGBRetractableTabBarDefaultLayoutStyle =    GBRetractableTabBarLayoutStyleSpread;
 
 @interface GBRetractableTabBar () {
-    UIView                                                      *_barBackgroundView;
-    UIImage                                                     *_barBackgroundImage;
-    CGFloat                                                     _barHeight;
-    BOOL                                                        _isShowing;
+    UIView                                                                              *_barBackgroundView;
+    UIImage                                                                             *_barBackgroundImage;
+    CGFloat                                                                             _barHeight;
+    BOOL                                                                                _isShowing;
 }
 
-@property (strong, nonatomic) UIView                            *contentView;
-@property (strong, nonatomic) UIView                            *barView;
-@property (strong, nonatomic) UIView                            *controlViewsContainer;
+@property (strong, nonatomic) UIView                                                    *contentView;
+@property (strong, nonatomic) UIView                                                    *barView;
+@property (strong, nonatomic) UIView                                                    *controlViewsContainer;
 
-@property (strong, nonatomic) NSMutableArray                    *myControlViews;
-@property (strong, nonatomic) NSMutableArray                    *myViewControllers;
-@property (strong, nonatomic) UIViewController                  *activeViewController;
-@property (assign, nonatomic) NSUInteger                        myActiveIndex;
+@property (strong, nonatomic) NSMutableArray                                            *myControlViews;
+@property (strong, nonatomic) NSMutableArray                                            *myViewControllers;
+@property (strong, nonatomic) UIViewController                                          *activeViewController;
+@property (assign, nonatomic) NSUInteger                                                myActiveIndex;
 
-@property (strong, nonatomic) UITapGestureRecognizer            *tapGestureRecognizer;
+@property (strong, nonatomic) UITapGestureRecognizer                                    *tapGestureRecognizer;
 
 @end
 
@@ -117,7 +118,7 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
     return _controlViewsContainer;
 }
 
-#pragma mark - Private API: custom accessors
+#pragma mark - Custom accessors
 
 -(void)setMyActiveIndex:(NSUInteger)myActiveIndex {
     //if its changed
@@ -162,6 +163,12 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
     }
 }
 
+-(void)setStyle:(GBRetractableTabBarLayoutStyle)style {
+    _style = style;
+    
+    [self _arrangeControlViews];
+}
+
 #pragma mark - Init
 
 -(id)initWithTabBarHeight:(CGFloat)tabBarHeight {
@@ -169,6 +176,7 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
         self.barHeight = tabBarHeight;
         self.myActiveIndex = kGBRetractableTabBarUndefinedIndex;
         _isShowing = YES;
+        self.style = kGBRetractableTabBarDefaultLayoutStyle;
     }
     
     return self;
@@ -250,11 +258,24 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
         [controlViews enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
             totalWidth += ((UIView *)obj).frame.size.width;
         }];
+
+        CGFloat leftMargin;
+        CGFloat collapsibleHorizontalMargin;
+        
+        switch (self.style) {
+            case GBRetractableTabBarLayoutStyleBunched: {
+                leftMargin = (self.view.bounds.size.width - totalWidth ) / 2;
+                collapsibleHorizontalMargin = 0;
+            } break;
                 
-        CGFloat collapsibleHorizontalMargin = totalWidth / (controlViews.count + 1);
+            case GBRetractableTabBarLayoutStyleSpread: {
+                leftMargin = 0;
+                collapsibleHorizontalMargin = totalWidth / (controlViews.count + 1);
+            } break;
+        }
         
         //set the frames and add them to the container
-        __block CGFloat howFar = 0;
+        __block CGFloat howFar = leftMargin;
         [controlViews enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
             //prep
             UIView *view = obj;

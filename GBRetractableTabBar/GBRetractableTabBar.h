@@ -24,6 +24,11 @@ extern NSUInteger const kGBRetractableTabBarUndefinedIndex;
 @protocol GBRetractableTabBarControlView;
 @protocol GBRetractableTabBarDelegate;
 
+typedef enum {
+    GBRetractableTabBarLayoutStyleSpread,
+    GBRetractableTabBarLayoutStyleBunched,
+} GBRetractableTabBarLayoutStyle;
+
 @interface GBRetractableTabBar : UIViewController
 
 @property (weak, nonatomic) id<GBRetractableTabBarDelegate>     delegate;
@@ -31,6 +36,7 @@ extern NSUInteger const kGBRetractableTabBarUndefinedIndex;
 @property (strong, nonatomic) UIView                            *barBackgroundView;
 @property (strong, nonatomic) UIImage                           *barBackgroundImage;
 @property (assign, nonatomic) BOOL                              isShowing;
+@property (assign, nonatomic) GBRetractableTabBarLayoutStyle    style;
 
 #pragma mark - Init
 
