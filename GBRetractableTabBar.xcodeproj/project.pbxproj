@@ -62,7 +62,7 @@
 		8AF9230417463F1000C8C9F4 /* GBRetractableTabBar-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "GBRetractableTabBar-Prefix.pch"; sourceTree = "<group>"; };
 		8AF9230517463F1000C8C9F4 /* GBRetractableTabBar.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GBRetractableTabBar.h; sourceTree = "<group>"; };
 		8AF9230717463F1000C8C9F4 /* GBRetractableTabBar.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GBRetractableTabBar.m; sourceTree = "<group>"; };
-		8AF9230E17463FBF00C8C9F4 /* GBRetractableTabBarViewProtocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GBRetractableTabBarViewProtocol.h; sourceTree = "<group>"; };
+		8AF9230E17463FBF00C8C9F4 /* GBRetractableTabBarControlViewProtocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GBRetractableTabBarControlViewProtocol.h; sourceTree = "<group>"; };
 		8AF9231A1746439F00C8C9F4 /* GBToolbox.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = GBToolbox.xcodeproj; path = ../GBToolbox/GBToolbox.xcodeproj; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -107,7 +107,7 @@
 		8AF9230217463F1000C8C9F4 /* GBRetractableTabBar */ = {
 			isa = PBXGroup;
 			children = (
-				8AF9230E17463FBF00C8C9F4 /* GBRetractableTabBarViewProtocol.h */,
+				8AF9230E17463FBF00C8C9F4 /* GBRetractableTabBarControlViewProtocol.h */,
 				8AF9230517463F1000C8C9F4 /* GBRetractableTabBar.h */,
 				8AF9230717463F1000C8C9F4 /* GBRetractableTabBar.m */,
 				8AF9230317463F1000C8C9F4 /* Supporting Files */,

@@ -9,7 +9,7 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
-#import "GBRetractableTabBarViewProtocol.h"
+#import "GBRetractableTabBarControlViewProtocol.h"
 
 extern NSUInteger const kGBRetractableTabBarUndefinedIndex;
 
@@ -21,7 +21,7 @@ extern NSUInteger const kGBRetractableTabBarUndefinedIndex;
 
 @end
 
-@protocol GBRetractableTabBarView;
+@protocol GBRetractableTabBarControlView;
 @protocol GBRetractableTabBarDelegate;
 
 @interface GBRetractableTabBar : UIViewController
@@ -42,28 +42,21 @@ extern NSUInteger const kGBRetractableTabBarUndefinedIndex;
 //Programatically set which viewController/controlView pair is active
 -(void)setActiveIndex:(NSUInteger)index;
 
+#pragma mark - Populating the tab bar
+
+//Adds a viewcontroller and his control view. If this is the first pair, they're activated (i.e. viewcontroller's view is shown, controlView is sent the setActive:YES message)
+-(void)addViewController:(UIViewController *)viewController withControlView:(UIView<GBRetractableTabBarControlView> *)controlView;
+
 #pragma mark - Control Views
-//Views added must all conform to the protocol but can be any subclass of UIView. Make sure they don't handle events in the responder chain, so that these may bubble down to the tab bar
+//Views added must all conform to the protocol but can be any subclass of UIView. Make sure they don't handle events in the responder chain, so that these may bubble on to the tab bar
 
-//Add a view to the end. The view is centered vertically and spaced evenly horizontally with all the other views
--(void)addControlView:(UIView<GBRetractableTabBarView> *)view;
-
-//Places a view at a specific position. You can set arbitrary indexes at arbitrary orders and it will work itself out. It doesn't follow NSArray semantics where you can only add to the end.
--(void)setControlView:(UIView<GBRetractableTabBarView> *)view forIndex:(NSUInteger)index;
-
-//Removes a view, if it leaves a sparse list, no prob
--(void)removeControlViewAtIndex:(NSUInteger)index;
-
-//Removes all views
--(void)removeAllControlViews;
+//Places a view at a specific position. You can set arbitrary indexes at arbitrary orders and it will work itself out. It doesn't follow NSArray semantics where you can only add immediately to the end. This is so that you can add things out of order
+-(void)setControlView:(UIView<GBRetractableTabBarControlView> *)view forIndex:(NSUInteger)index;
 
 //Return them as an array
 -(NSArray *)controlViews;
 
 #pragma mark - View Controllers
-
-//Just adds him to the end
--(void)setViewController:(UIViewController *)viewController;
 
 //Sets the view controller, releases the old one if there was one (and removes his view from the tab bar controller if he was active), if this is the active index, he immediately shows him
 -(void)setViewController:(UIViewController *)viewController forIndex:(NSUInteger)index;

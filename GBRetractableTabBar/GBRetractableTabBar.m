@@ -187,43 +187,39 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
     self.myActiveIndex = index;
 }
 
+#pragma mark - Populating the tab bar
+
+//Adds a viewcontroller and his control view. If this is the first pair, they're activated (i.e. viewcontroller's view is shown, controlView is sent the setActive:YES message)
+-(void)addViewController:(UIViewController *)viewController withControlView:(UIView<GBRetractableTabBarControlView> *)controlView {
+    if (viewController && controlView) {
+        [self addViewController:viewController];
+        [self addControlView:controlView];
+    }
+}
+
 #pragma mark - Control Views
 
--(void)addControlView:(UIView<GBRetractableTabBarView> *)view {
+-(void)addControlView:(UIView<GBRetractableTabBarControlView> *)view {
     [self setControlView:view forIndex:self.myControlViews.count];
 }
 
--(void)setControlView:(UIView<GBRetractableTabBarView> *)view forIndex:(NSUInteger)index {
-    //first make sure the array has that length
-    [self.myControlViews padToIndex:index];
-    
-    //add the view into the array
-    self.myControlViews[index] = view;
-    
-    //configure this control view a little first
-    [self _configureControlViewProperties:view];
-    
-    //arrange the control views inside the tab bar
-    [self _arrangeControlViews];
-    
-    //activate him?
-    [self _happyActiveTrigger];
-}
-
--(void)removeControlViewAtIndex:(NSUInteger)index {
-    //NSMutableArray can handle this properly
-    [self.myControlViews removeObjectAtIndex:index];
-    
-    //arrange the remaining ones
-    [self _arrangeControlViews];
-}
-
--(void)removeAllControlViews {
-    //kill em all
-    self.myControlViews = nil;
-    
-    //arrange
-    [self _arrangeControlViews];
+-(void)setControlView:(UIView<GBRetractableTabBarControlView> *)view forIndex:(NSUInteger)index {
+    if (view) {
+        //first make sure the array has that length
+        [self.myControlViews padToIndex:index];
+        
+        //add the view into the array
+        self.myControlViews[index] = view;
+        
+        //configure this control view a little first
+        [self _configureControlViewProperties:view];
+        
+        //arrange the control views inside the tab bar
+        [self _arrangeControlViews];
+        
+        //activate him?
+        [self _happyActiveTrigger];
+    }
 }
 
 -(NSArray *)controlViews {
@@ -234,7 +230,7 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
 
 #pragma mark - Private API: Control Views
 
--(void)_configureControlViewProperties:(UIView<GBRetractableTabBarView> *)controlView {
+-(void)_configureControlViewProperties:(UIView<GBRetractableTabBarControlView> *)controlView {
     //make sure he's not resizable
     controlView.autoresizingMask = UIViewAutoresizingNone;
     
@@ -282,24 +278,26 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
 
 -(void)_activateCorrectControlView {
     //prep
-    UIView<GBRetractableTabBarView> *currentlyActiveView = (self.myActiveIndex != kGBRetractableTabBarUndefinedIndex) ? self.controlViews[self.myActiveIndex] : nil;
+    UIView<GBRetractableTabBarControlView> *currentlyActiveView = (self.myActiveIndex != kGBRetractableTabBarUndefinedIndex) ? self.controlViews[self.myActiveIndex] : nil;
     
     //if the target is already active then we're done
     if (!currentlyActiveView.isActive) {
         //make sure any old dudes get deactivated first
         [self.myControlViews enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
-            UIView<GBRetractableTabBarView> *view = obj;
-            
-            //this is the new active one
-            if (idx == self.myActiveIndex) {
-                view.isActive = YES;
-            }
-            //all the rest
-            else {
-                //check if he's active...
-                if (view.isActive) {
-                    //...if so, deactivate him
-                    view.isActive = NO;
+            if ([obj isKindOfClass:[UIView class]]) {
+                UIView<GBRetractableTabBarControlView> *view = obj;
+                
+                //this is the new active one
+                if (idx == self.myActiveIndex) {
+                    view.isActive = YES;
+                }
+                //all the rest
+                else {
+                    //check if he's active...
+                    if (view.isActive) {
+                        //...if so, deactivate him
+                        view.isActive = NO;
+                    }
                 }
             }
         }];
@@ -308,28 +306,30 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
 
 #pragma mark - View Controllers
 
--(void)setViewController:(UIViewController *)viewController {
+-(void)addViewController:(UIViewController *)viewController {
     [self setViewController:viewController forIndex:self.myViewControllers.count];
 }
 
 -(void)setViewController:(UIViewController *)viewController forIndex:(NSUInteger)index {
-    //make sure he knows who we are
-    viewController.retractableTabBar = self;
-    
-    //if we're gonna replace someone, this is a good time to say goodbye
-    if (self.viewControllers.count > index && self.viewControllers[index]) ((UIViewController *)self.viewControllers[index]).retractableTabBar = nil;
-    
-    //make sure the array has enough space
-    [self.myViewControllers padToIndex:index];
-    
-    //insert the viewcontroller
-    self.myViewControllers[index] = viewController;
-    
-    //sort out the drawing, vc lifecycle, etc.
-    [self _sortOutViewControllers];
-    
-    //activate him?
-    [self _happyActiveTrigger];
+    if (viewController) {
+        //make sure he knows who we are
+        viewController.retractableTabBar = self;
+        
+        //if we're gonna replace someone, this is a good time to say goodbye
+        if (self.viewControllers.count > index && self.viewControllers[index]) ((UIViewController *)self.viewControllers[index]).retractableTabBar = nil;
+        
+        //make sure the array has enough space
+        [self.myViewControllers padToIndex:index];
+        
+        //insert the viewcontroller
+        self.myViewControllers[index] = viewController;
+        
+        //sort out the drawing, vc lifecycle, etc.
+        [self _sortOutViewControllers];
+        
+        //activate him?
+        [self _happyActiveTrigger];
+    }
 }
 
 -(NSArray *)viewControllers {
@@ -359,23 +359,15 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
 
 -(void)hideViewController:(UIViewController *)viewController {
     if (viewController) {
-        [viewController viewWillDisappear:NO];
-        
         [viewController.view removeFromSuperview];
-        
-        [viewController viewDidDisappear:NO];
     }
 }
 
 -(void)showViewController:(UIViewController *)viewController {
     if (viewController) {
-        [viewController viewWillAppear:NO];
-        
         viewController.view.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
         viewController.view.frame = self.contentView.bounds;
         [self.contentView addSubview:viewController.view];
-        
-        [viewController viewDidAppear:YES];
     }
 }
 

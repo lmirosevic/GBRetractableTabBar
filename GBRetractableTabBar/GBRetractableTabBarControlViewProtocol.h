@@ -1,5 +1,5 @@
 //
-//  GBRetractableTabBarView.h
+//  GBRetractableTabBarControlView.h
 //  GBRetractableTabBar
 //
 //  Created by Luka Mirosevic on 17/05/2013.
@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 
-@protocol GBRetractableTabBarView <NSObject>
+@protocol GBRetractableTabBarControlView <NSObject>
 @required
 
 //Can be any view but it has to be able to change its drawing state
