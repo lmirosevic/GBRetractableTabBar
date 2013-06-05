@@ -254,10 +254,10 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
     //only if there's anything to add
     if (controlViews.count > 0) {
         //now calculate the spacing, can be negative doesn't matter
-        __block CGFloat totalWidth = 0;
-        [controlViews enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
-            totalWidth += ((UIView *)obj).frame.size.width;
-        }];
+        CGFloat totalWidth = 0;
+        for (UIView *view in controlViews) {
+            totalWidth += view.frame.size.width;
+        }
 
         CGFloat leftMargin;
         CGFloat collapsibleHorizontalMargin;
@@ -270,16 +270,13 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
                 
             case GBRetractableTabBarLayoutStyleSpread: {
                 leftMargin = 0;
-                collapsibleHorizontalMargin = totalWidth / (controlViews.count + 1);
+                collapsibleHorizontalMargin = (self.view.bounds.size.width - totalWidth) / (controlViews.count + 1);
             } break;
         }
         
         //set the frames and add them to the container
-        __block CGFloat howFar = leftMargin;
-        [controlViews enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
-            //prep
-            UIView *view = obj;
-            
+        CGFloat howFar = leftMargin;
+        for (UIView *view in controlViews) {
             //make sure it behaves
             view.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
             
@@ -291,7 +288,7 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
             
             //add them to the container
             [self.controlViewsContainer addSubview:view];
-        }];
+        }
     }
 }
 
@@ -440,7 +437,10 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
     _barBackgroundImage = nil;
     
     //draw the new one
-    [self.view addSubview:barBackgroundView];
+    [self.barView addSubview:barBackgroundView];
+    
+    //send it to the back
+    [self.barView sendSubviewToBack:self.barBackgroundView];
 }
 
 -(UIView *)barBackgroundView {
@@ -465,14 +465,11 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
 
 -(void)_configureBarBackgroundView {
     if (self.barBackgroundView) {
-        //set it's width
-        self.barBackgroundView.frame = CGRectMake(0, self.barBackgroundView.frame.size.height, self.barView.bounds.size.width, self.barHeight);
+        //set it's frame
+        self.barBackgroundView.frame = CGRectMake(0, self.barHeight - self.barBackgroundView.frame.size.height, self.barView.bounds.size.width, self.barBackgroundView.frame.size.height);
         
         //make sure it stretches to the width and keeps it's height and is pinned to the bottom
         self.barBackgroundView.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleWidth;
-        
-        //send it to the back
-        [self.barView sendSubviewToBack:self.barBackgroundView];
     }
 }
 
@@ -501,10 +498,10 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
         }
         else {
             //contentview goes down
-            contentViewTargetFrame = CGRectMake(0, 0, self.view.bounds.size.width, self.view.bounds.size.height);
+            contentViewTargetFrame = CGRectMake(0, 0, self.view.bounds.size.width, self.view.bounds.size.height + self.barOverflowDistance);
             
             //barview goes down
-            barViewTargetFrame = CGRectMake(0, self.view.bounds.size.height, self.view.bounds.size.width, self.barHeight);
+            barViewTargetFrame = CGRectMake(0, self.view.bounds.size.height + self.barOverflowDistance, self.view.bounds.size.width, self.barHeight);
         }
         
         //property changes

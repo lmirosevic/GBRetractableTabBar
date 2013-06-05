@@ -37,6 +37,7 @@ typedef enum {
 @property (strong, nonatomic) UIImage                           *barBackgroundImage;
 @property (assign, nonatomic) BOOL                              isShowing;
 @property (assign, nonatomic) GBRetractableTabBarLayoutStyle    style;
+@property (assign, nonatomic) CGFloat                           barOverflowDistance;
 
 #pragma mark - Init
 
