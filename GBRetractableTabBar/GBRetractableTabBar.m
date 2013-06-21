@@ -6,6 +6,8 @@
 //  Copyright (c) 2013 Goonbee. All rights reserved.
 //
 
+//foo should pop to root if the controlview is pressed when already active, and the contentview is of class uinavigationcontroller
+
 #import "GBRetractableTabBar.h"
 
 #import "GBToolbox.h"
