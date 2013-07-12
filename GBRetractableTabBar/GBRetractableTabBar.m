@@ -12,15 +12,36 @@
 
 #import "GBToolbox.h"
 
+static GBRetractableTabBarContentResizingMode const kDefaultResizingMode =              GBRetractableTabBarContentResizingModeAutomaticallyAdjustHeight;
+
 @interface UIViewController ()
 
 @property (weak, nonatomic, readwrite) GBRetractableTabBar                              *retractableTabBar;
+
+@property (strong, nonatomic) NSNumber                                                  *retractableTabBarResizingModeNumber;
+@property (assign, nonatomic) GBRetractableTabBarContentResizingMode                    retractableTabBarResizingMode;
 
 @end
 
 @implementation UIViewController (GBRetractableTabBar)
 
 _associatedObject(weak, nonatomic, GBRetractableTabBar *, retractableTabBar, setRetractableTabBar)
+
+_associatedObject(strong, nonatomic, NSNumber *, retractableTabBarResizingModeNumber, setRetractableTabBarResizingModeNumber)
+
+-(GBRetractableTabBarContentResizingMode)retractableTabBarResizingMode {
+    NSNumber *resizingModeNumber = self.retractableTabBarResizingModeNumber;
+    if (resizingModeNumber) {
+        return (GBRetractableTabBarContentResizingMode)resizingModeNumber.intValue;
+    }
+    else {
+        return kDefaultResizingMode;
+    }
+}
+
+-(void)setRetractableTabBarResizingMode:(GBRetractableTabBarContentResizingMode)retractableTabBarResizingMode {
+    self.retractableTabBarResizingModeNumber = @(retractableTabBarResizingMode);
+}
 
 @end
 
@@ -475,6 +496,66 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
     }
 }
 
+#pragma mark - Private API: Retracting
+
+-(void)_handleGeometryShowing:(BOOL)shouldShowBar {
+    CGRect contentViewTargetFrame;
+    CGRect barViewTargetFrame;
+    
+    CGRect barShownTargetFrame = CGRectMake(0,
+                                            self.view.bounds.size.height - self.barHeight,
+                                            self.view.bounds.size.width,
+                                            self.barHeight);
+    
+    CGRect barHiddenTargetFrame = CGRectMake(0,
+                                             self.view.bounds.size.height + self.barOverflowDistance,
+                                             self.view.bounds.size.width,
+                                             self.barHeight);
+    
+    CGRect contentViewFullHeightTargetFrame = CGRectMake(0,
+                                                         0,
+                                                         self.view.bounds.size.width,
+                                                         self.view.bounds.size.height + self.barOverflowDistance);
+    
+    CGRect contentViewMinusBarHeightTargetFrame = CGRectMake(0,
+                                                             0,
+                                                             self.view.bounds.size.width,
+                                                             self.view.bounds.size.height - self.barHeight);
+    
+    //sort out bar sizing
+    if (shouldShowBar) {
+        //barview goes up
+        barViewTargetFrame = barShownTargetFrame;
+    }
+    else {
+        //barview goes down
+        barViewTargetFrame = barHiddenTargetFrame;
+    }
+    
+    //sort out content view sizing
+    if (shouldShowBar) {
+        switch (self.activeViewController.retractableTabBarResizingMode) {
+                //shrink the height
+            case GBRetractableTabBarContentResizingModeAutomaticallyAdjustHeight: {
+                contentViewTargetFrame = contentViewMinusBarHeightTargetFrame;
+            } break;
+                
+                //keep full size height
+            case GBRetractableTabBarContentResizingModeFixedFullHeight: {
+                contentViewTargetFrame = contentViewFullHeightTargetFrame;
+            } break;
+        }
+    }
+    else {
+        //contentview goes down
+        contentViewTargetFrame = contentViewFullHeightTargetFrame;
+    }
+    
+    //do the actual property changes
+    self.contentView.frame = contentViewTargetFrame;
+    self.barView.frame = barViewTargetFrame;
+}
+
 #pragma mark - Retracting
 
 -(void)setIsShowing:(BOOL)isShowing {
@@ -485,39 +566,20 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
     return _isShowing;
 }
 
--(void)show:(BOOL)shouldShow animated:(BOOL)shouldAnimate {
+-(void)show:(BOOL)shouldShowBar animated:(BOOL)shouldAnimate {
     //if it changed
-    if (shouldShow != _isShowing) {
-        CGRect contentViewTargetFrame;
-        CGRect barViewTargetFrame;
-        
-        if (shouldShow) {
-            //contentview goes up
-            contentViewTargetFrame = CGRectMake(0, 0, self.view.bounds.size.width, self.view.bounds.size.height - self.barHeight);
-            
-            //barview goes up
-            barViewTargetFrame = CGRectMake(0, self.view.bounds.size.height - self.barHeight, self.view.bounds.size.width, self.barHeight);
-        }
-        else {
-            //contentview goes down
-            contentViewTargetFrame = CGRectMake(0, 0, self.view.bounds.size.width, self.view.bounds.size.height + self.barOverflowDistance);
-            
-            //barview goes down
-            barViewTargetFrame = CGRectMake(0, self.view.bounds.size.height + self.barOverflowDistance, self.view.bounds.size.width, self.barHeight);
-        }
-        
+    if (shouldShowBar != _isShowing) {
         //property changes
         VoidBlock animations = ^{
-            self.contentView.frame = contentViewTargetFrame;
-            self.barView.frame = barViewTargetFrame;
+            [self _handleGeometryShowing:shouldShowBar];
         };
         
         //once they've been changed, call this
         VoidBlock completion = ^{
-            _isShowing = shouldShow;
+            _isShowing = shouldShowBar;
             
             //tell our delegate
-            if (shouldShow) {
+            if (shouldShowBar) {
                 if ([self.delegate respondsToSelector:@selector(tabBarDidShowTabBar:animated:)]) {
                     [self.delegate tabBarDidShowTabBar:self animated:shouldAnimate];
                 }
@@ -543,6 +605,18 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
             completion();
         }
     }
+}
+
+#pragma mark - View sizing behaviour
+
+-(void)setContentResizingMode:(GBRetractableTabBarContentResizingMode)contentResizingMode forViewController:(UIViewController *)viewController {
+    if (!viewController) @throw [NSException exceptionWithName:NSInvalidArgumentException reason:@"viewController must not be nil" userInfo:nil];
+    
+    //set the resizing mode for that VC
+    viewController.retractableTabBarResizingMode = contentResizingMode;
+    
+    //this relays out the contentview, without animating, so the settings is applied immediately
+    [self _handleGeometryShowing:self.isShowing];
 }
 
 #pragma mark - Tap gesture recognizer

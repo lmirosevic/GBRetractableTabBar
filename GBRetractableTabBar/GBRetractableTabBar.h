@@ -30,6 +30,11 @@ typedef enum {
     GBRetractableTabBarLayoutStyleBunched,
 } GBRetractableTabBarLayoutStyle;
 
+typedef enum {
+    GBRetractableTabBarContentResizingModeAutomaticallyAdjustHeight,
+    GBRetractableTabBarContentResizingModeFixedFullHeight,
+} GBRetractableTabBarContentResizingMode;
+
 @interface GBRetractableTabBar : UIViewController
 
 @property (weak, nonatomic) id<GBRetractableTabBarDelegate>                 delegate;
@@ -92,7 +97,12 @@ typedef enum {
 #pragma mark - Retracting
 
 //Shows or hides the tab bar, and shrinks or stretches the contentView respectively
--(void)show:(BOOL)shouldShow animated:(BOOL)shouldAnimate;
+-(void)show:(BOOL)shouldShowBar animated:(BOOL)shouldAnimate;
+
+#pragma mark - View sizing behaviour
+
+//Changes the resizing behaviour of the content view controller's view
+-(void)setContentResizingMode:(GBRetractableTabBarContentResizingMode)contentResizingMode forViewController:(UIViewController *)viewController;
 
 @end
 
