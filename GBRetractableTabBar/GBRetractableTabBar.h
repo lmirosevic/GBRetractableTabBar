@@ -17,9 +17,10 @@ extern NSUInteger const kGBRetractableTabBarUndefinedIndex;
 
 @interface UIViewController (GBRetractableTabBar)
 
-@property (weak, nonatomic, readonly) GBRetractableTabBar       *retractableTabBar;
+@property (weak, nonatomic, readonly) GBRetractableTabBar                   *retractableTabBar;
 
 @end
+
 
 @protocol GBRetractableTabBarControlView;
 @protocol GBRetractableTabBarDelegate;
@@ -31,13 +32,13 @@ typedef enum {
 
 @interface GBRetractableTabBar : UIViewController
 
-@property (weak, nonatomic) id<GBRetractableTabBarDelegate>     delegate;
-@property (assign, nonatomic) CGFloat                           barHeight;
-@property (strong, nonatomic) UIView                            *barBackgroundView;
-@property (strong, nonatomic) UIImage                           *barBackgroundImage;
-@property (assign, nonatomic) BOOL                              isShowing;
-@property (assign, nonatomic) GBRetractableTabBarLayoutStyle    style;
-@property (assign, nonatomic) CGFloat                           barOverflowDistance;
+@property (weak, nonatomic) id<GBRetractableTabBarDelegate>                 delegate;
+@property (assign, nonatomic) CGFloat                                       barHeight;
+@property (strong, nonatomic) UIView                                        *barBackgroundView;
+@property (strong, nonatomic) UIImage                                       *barBackgroundImage;
+@property (assign, nonatomic) BOOL                                          isShowing;
+@property (assign, nonatomic) GBRetractableTabBarLayoutStyle                style;
+@property (assign, nonatomic) CGFloat                                       barOverflowDistance;
 
 #pragma mark - Init
 
