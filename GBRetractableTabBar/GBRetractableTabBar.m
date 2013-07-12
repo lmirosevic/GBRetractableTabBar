@@ -12,14 +12,16 @@
 
 #import "GBToolbox.h"
 
-static GBRetractableTabBarContentResizingMode const kDefaultResizingMode =              GBRetractableTabBarContentResizingModeAutomaticallyAdjustHeight;
+static GBRetractableTabBarContentResizingMode const kDefaultResizingMode =                          GBRetractableTabBarContentResizingModeAutomaticallyAdjustHeight;
+static BOOL const kDefaultShouldPopToRootOnNavigationControllerWhenTappingActiveControlView =       YES;
+
 
 @interface UIViewController ()
 
-@property (weak, nonatomic, readwrite) GBRetractableTabBar                              *retractableTabBar;
+@property (weak, nonatomic, readwrite) GBRetractableTabBar                                          *retractableTabBar;
 
-@property (strong, nonatomic) NSNumber                                                  *retractableTabBarResizingModeNumber;
-@property (assign, nonatomic) GBRetractableTabBarContentResizingMode                    retractableTabBarResizingMode;
+@property (strong, nonatomic) NSNumber                                                              *retractableTabBarResizingModeNumber;
+@property (assign, nonatomic) GBRetractableTabBarContentResizingMode                                retractableTabBarResizingMode;
 
 @end
 
@@ -46,28 +48,28 @@ _associatedObject(strong, nonatomic, NSNumber *, retractableTabBarResizingModeNu
 @end
 
 
-NSUInteger const kGBRetractableTabBarUndefinedIndex =                                   NSUIntegerMax;
+NSUInteger const kGBRetractableTabBarUndefinedIndex =                                               NSUIntegerMax;
 
-static CGFloat const kGBRetractableBarAnimationDuration =                               0.3;
-static GBRetractableTabBarLayoutStyle const kGBRetractableTabBarDefaultLayoutStyle =    GBRetractableTabBarLayoutStyleSpread;
+static CGFloat const kGBRetractableBarAnimationDuration =                                           0.3;
+static GBRetractableTabBarLayoutStyle const kGBRetractableTabBarDefaultLayoutStyle =                GBRetractableTabBarLayoutStyleSpread;
 
 @interface GBRetractableTabBar () {
-    UIView                                                                              *_barBackgroundView;
-    UIImage                                                                             *_barBackgroundImage;
-    CGFloat                                                                             _barHeight;
-    BOOL                                                                                _isShowing;
+    UIView                                                                                          *_barBackgroundView;
+    UIImage                                                                                         *_barBackgroundImage;
+    CGFloat                                                                                         _barHeight;
+    BOOL                                                                                            _isShowing;
 }
 
-@property (strong, nonatomic) UIView                                                    *contentView;
-@property (strong, nonatomic) UIView                                                    *barView;
-@property (strong, nonatomic) UIView                                                    *controlViewsContainer;
+@property (strong, nonatomic) UIView                                                                *contentView;
+@property (strong, nonatomic) UIView                                                                *barView;
+@property (strong, nonatomic) UIView                                                                *controlViewsContainer;
 
-@property (strong, nonatomic) NSMutableArray                                            *myControlViews;
-@property (strong, nonatomic) NSMutableArray                                            *myViewControllers;
-@property (strong, nonatomic) UIViewController                                          *activeViewController;
-@property (assign, nonatomic) NSUInteger                                                myActiveIndex;
+@property (strong, nonatomic) NSMutableArray                                                        *myControlViews;
+@property (strong, nonatomic) NSMutableArray                                                        *myViewControllers;
+@property (strong, nonatomic) UIViewController                                                      *activeViewController;
+@property (assign, nonatomic) NSUInteger                                                            myActiveIndex;
 
-@property (strong, nonatomic) UITapGestureRecognizer                                    *tapGestureRecognizer;
+@property (strong, nonatomic) UITapGestureRecognizer                                                *tapGestureRecognizer;
 
 @end
 
@@ -200,6 +202,7 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
         self.myActiveIndex = kGBRetractableTabBarUndefinedIndex;
         _isShowing = YES;
         self.style = kGBRetractableTabBarDefaultLayoutStyle;
+        self.shouldPopToRootOnNavigationControllerWhenTappingActiveControlView = kDefaultShouldPopToRootOnNavigationControllerWhenTappingActiveControlView;
     }
     
     return self;
@@ -631,13 +634,35 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
             UIView *view = obj;
             
             if (CGRectContainsPoint(view.frame, target)) {
-                //set active
-                self.myActiveIndex = idx;
+                //first tap
+                if (self.myActiveIndex != idx) {
+                    [self _didTapOnInActiveControlViewWithIndex:idx];
+                }
+                //reactive tap
+                else {
+                    [self _didTapOnAlreadyActiveControlViewWithIndex:idx];
+                }
                 
                 //dont look further
                 *stop = YES;
             }
         }];
+    }
+}
+
+#pragma mark - Private: Tapping
+
+-(void)_didTapOnInActiveControlViewWithIndex:(NSUInteger)index {
+    //set active
+    self.myActiveIndex = index;
+}
+
+-(void)_didTapOnAlreadyActiveControlViewWithIndex:(NSUInteger)index {
+    //pop to root if desired
+    if (self.shouldPopToRootOnNavigationControllerWhenTappingActiveControlView) {
+        if ([self.activeViewController respondsToSelector:@selector(popToRootViewControllerAnimated:)]) {
+            [((UINavigationController *)self.activeViewController) popToRootViewControllerAnimated:YES];
+        }
     }
 }
 

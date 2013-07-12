@@ -44,6 +44,7 @@ typedef enum {
 @property (assign, nonatomic) BOOL                                          isShowing;
 @property (assign, nonatomic) GBRetractableTabBarLayoutStyle                style;
 @property (assign, nonatomic) CGFloat                                       barOverflowDistance;
+@property (assign, nonatomic) BOOL                                          shouldPopToRootOnNavigationControllerWhenTappingActiveControlView;
 
 #pragma mark - Init
 
