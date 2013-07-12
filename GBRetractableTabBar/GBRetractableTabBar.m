@@ -6,8 +6,6 @@
 //  Copyright (c) 2013 Goonbee. All rights reserved.
 //
 
-//foo should pop to root if the controlview is pressed when already active, and the contentview is of class uinavigationcontroller
-
 #import "GBRetractableTabBar.h"
 
 #import "GBToolbox.h"
@@ -169,6 +167,9 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
             
             //control views
             [self _activateCorrectControlView];
+        
+            //handle the geometry (some contentVCs might have different resizing settings
+            [self _handleGeometryShowing:self.isShowing];
         
         
         //now tell our delegate what happenend
