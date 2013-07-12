@@ -66,7 +66,7 @@ static GBRetractableTabBarLayoutStyle const kGBRetractableTabBarDefaultLayoutSty
 
 @property (strong, nonatomic) NSMutableArray                                                        *myControlViews;
 @property (strong, nonatomic) NSMutableArray                                                        *myViewControllers;
-@property (strong, nonatomic) UIViewController                                                      *activeViewController;
+@property (strong, nonatomic, readwrite) UIViewController                                           *activeViewController;
 @property (assign, nonatomic) NSUInteger                                                            myActiveIndex;
 
 @property (strong, nonatomic) UITapGestureRecognizer                                                *tapGestureRecognizer;
@@ -144,6 +144,10 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
 }
 
 #pragma mark - Custom accessors
+
+-(NSUInteger)activeIndex {
+    return self.myActiveIndex;
+}
 
 -(void)setMyActiveIndex:(NSUInteger)myActiveIndex {
     //if its changed

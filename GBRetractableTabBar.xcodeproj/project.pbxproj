@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8A335DE517901B0300B46E8F /* GBRetractableTabBar+UINavigationController.m in Sources */ = {isa = PBXBuildFile; fileRef = 8A335DE417901B0300B46E8F /* GBRetractableTabBar+UINavigationController.m */; };
 		8AF9230117463F1000C8C9F4 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8AF9230017463F1000C8C9F4 /* Foundation.framework */; };
 		8AF9230617463F1000C8C9F4 /* GBRetractableTabBar.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 8AF9230517463F1000C8C9F4 /* GBRetractableTabBar.h */; };
 		8AF9230817463F1000C8C9F4 /* GBRetractableTabBar.m in Sources */ = {isa = PBXBuildFile; fileRef = 8AF9230717463F1000C8C9F4 /* GBRetractableTabBar.m */; };
@@ -57,6 +58,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		8A335DE317901B0300B46E8F /* GBRetractableTabBar+UINavigationController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "GBRetractableTabBar+UINavigationController.h"; sourceTree = "<group>"; };
+		8A335DE417901B0300B46E8F /* GBRetractableTabBar+UINavigationController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "GBRetractableTabBar+UINavigationController.m"; sourceTree = "<group>"; };
 		8AF922FD17463F1000C8C9F4 /* libGBRetractableTabBar.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libGBRetractableTabBar.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		8AF9230017463F1000C8C9F4 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		8AF9230417463F1000C8C9F4 /* GBRetractableTabBar-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "GBRetractableTabBar-Prefix.pch"; sourceTree = "<group>"; };
@@ -110,6 +113,8 @@
 				8AF9230E17463FBF00C8C9F4 /* GBRetractableTabBarControlViewProtocol.h */,
 				8AF9230517463F1000C8C9F4 /* GBRetractableTabBar.h */,
 				8AF9230717463F1000C8C9F4 /* GBRetractableTabBar.m */,
+				8A335DE317901B0300B46E8F /* GBRetractableTabBar+UINavigationController.h */,
+				8A335DE417901B0300B46E8F /* GBRetractableTabBar+UINavigationController.m */,
 				8AF9230317463F1000C8C9F4 /* Supporting Files */,
 			);
 			path = GBRetractableTabBar;
@@ -225,6 +230,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				8AF9230817463F1000C8C9F4 /* GBRetractableTabBar.m in Sources */,
+				8A335DE517901B0300B46E8F /* GBRetractableTabBar+UINavigationController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

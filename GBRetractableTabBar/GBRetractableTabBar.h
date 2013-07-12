@@ -38,13 +38,17 @@ typedef enum {
 @interface GBRetractableTabBar : UIViewController
 
 @property (weak, nonatomic) id<GBRetractableTabBarDelegate>                 delegate;
+
 @property (assign, nonatomic) CGFloat                                       barHeight;
 @property (strong, nonatomic) UIView                                        *barBackgroundView;
 @property (strong, nonatomic) UIImage                                       *barBackgroundImage;
-@property (assign, nonatomic) BOOL                                          isShowing;
 @property (assign, nonatomic) GBRetractableTabBarLayoutStyle                style;
 @property (assign, nonatomic) CGFloat                                       barOverflowDistance;
 @property (assign, nonatomic) BOOL                                          shouldPopToRootOnNavigationControllerWhenTappingActiveControlView;
+
+@property (assign, nonatomic) BOOL                                          isShowing;
+@property (strong, nonatomic, readonly) UIViewController                    *activeViewController;
+@property (assign, nonatomic) NSUInteger                                    activeIndex;
 
 #pragma mark - Init
 
@@ -128,3 +132,8 @@ typedef enum {
 -(void)tabBarDidShowTabBar:(GBRetractableTabBar *)tabBar animated:(BOOL)animated;
 
 @end
+
+//adds some features for interacting with the UINavigationController
+#import "GBRetractableTabBar+UINavigationController.h"
+
+
