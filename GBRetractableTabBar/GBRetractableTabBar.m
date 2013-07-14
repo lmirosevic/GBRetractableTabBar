@@ -631,6 +631,9 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
 
 -(void)tapped:(UITapGestureRecognizer *)gestureRecognizer {
     if (gestureRecognizer.state == UIGestureRecognizerStateEnded) {
+        //ensure we're shown, don't ever want to get in the situation where you switch to a view controller which doesn't have a facility of hiding/showing the tab bar, and the bar being hidden
+        [self show:YES animated:YES];
+        
         //find location of tap
         CGPoint target = [gestureRecognizer locationInView:self.barView];
         
