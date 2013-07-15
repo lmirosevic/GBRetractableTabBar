@@ -15,6 +15,6 @@
 -(void)setIsActive:(BOOL)isActive;
 -(BOOL)isActive;
 
-//Note: also make sure your views don't do any event handling, and let that pass to the TabBar
+//Note: also make sure your views don't do any event handling, and let that pass through to the TabBar
 
 @end

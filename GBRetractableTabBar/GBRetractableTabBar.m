@@ -671,9 +671,19 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
 -(void)_didTapOnInActiveControlViewWithIndex:(NSUInteger)index {
     //set active
     self.myActiveIndex = index;
+    
+    //tell delegate about tap
+    if ([self.delegate respondsToSelector:@selector(tabBar:didTapOnControlViewWithIndex:controlView:)]) {
+        [self.delegate tabBar:self didTapOnControlViewWithIndex:index controlView:self.controlViews[index]];
+    }
 }
 
 -(void)_didTapOnAlreadyActiveControlViewWithIndex:(NSUInteger)index {
+    //tell delegate about re tap
+    if ([self.delegate respondsToSelector:@selector(tabBar:didReTapOnControlViewWithIndex:controlView:)]) {
+        [self.delegate tabBar:self didReTapOnControlViewWithIndex:index controlView:self.controlViews[index]];
+    }
+    
     //pop to root if desired
     if (self.shouldPopToRootOnNavigationControllerWhenTappingActiveControlView) {
         if ([self.activeViewController respondsToSelector:@selector(popToRootViewControllerAnimated:)]) {

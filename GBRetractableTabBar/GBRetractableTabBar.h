@@ -119,6 +119,12 @@ typedef enum {
 @protocol GBRetractableTabBarDelegate <NSObject>
 @optional
 
+//Called when a control view is tapped
+-(void)tabBar:(GBRetractableTabBar *)tabBar didTapOnControlViewWithIndex:(NSUInteger)index controlView:(UIView<GBRetractableTabBarControlView> *)controlView;
+
+//Called when a control view is re-tapped (tapped when already active)
+-(void)tabBar:(GBRetractableTabBar *)tabBar didReTapOnControlViewWithIndex:(NSUInteger)index controlView:(UIView<GBRetractableTabBarControlView> *)controlView;
+
 //Called when a view controller is shown
 -(void)tabBar:(GBRetractableTabBar *)tabBar didShowViewControllerWithIndex:(NSUInteger)index viewController:(UIViewController *)viewController;
 
