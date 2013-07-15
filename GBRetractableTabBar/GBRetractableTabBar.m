@@ -66,6 +66,7 @@ static GBRetractableTabBarLayoutStyle const kGBRetractableTabBarDefaultLayoutSty
 @property (strong, nonatomic) NSMutableArray                                                        *myViewControllers;
 @property (strong, nonatomic, readwrite) UIViewController                                           *activeViewController;
 @property (assign, nonatomic) NSUInteger                                                            myActiveIndex;
+@property (assign, nonatomic, readwrite) NSUInteger                                                 previousActiveIndex;
 
 @property (strong, nonatomic) UITapGestureRecognizer                                                *tapGestureRecognizer;
 
@@ -150,6 +151,8 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
 -(void)setMyActiveIndex:(NSUInteger)myActiveIndex {
     //if its changed
     if (_myActiveIndex != myActiveIndex) {
+        self.previousActiveIndex = _myActiveIndex;
+        
         //remember them
         NSUInteger oldIndex = _myActiveIndex;
         NSUInteger newIndex = myActiveIndex;
@@ -222,6 +225,11 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
 //Programatically set which viewController/controlView pair is active
 -(void)setActiveIndex:(NSUInteger)index {
     self.myActiveIndex = index;
+}
+
+//Lets you go back to the previously selected tab
+-(void)restorePreviousActiveIndex {
+    self.activeIndex = self.previousActiveIndex;
 }
 
 #pragma mark - Populating the tab bar

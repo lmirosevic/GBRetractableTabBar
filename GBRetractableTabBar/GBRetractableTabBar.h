@@ -49,6 +49,7 @@ typedef enum {
 @property (assign, nonatomic) BOOL                                          isShowing;
 @property (strong, nonatomic, readonly) UIViewController                    *activeViewController;
 @property (assign, nonatomic) NSUInteger                                    activeIndex;
+@property (assign, nonatomic, readonly) NSUInteger                          previousActiveIndex;
 
 #pragma mark - Init
 
@@ -59,6 +60,9 @@ typedef enum {
 
 //Programatically set which viewController/controlView pair is active
 -(void)setActiveIndex:(NSUInteger)index;
+
+//Lets you go back to the previously selected tab
+-(void)restorePreviousActiveIndex;
 
 #pragma mark - Populating the tab bar
 
