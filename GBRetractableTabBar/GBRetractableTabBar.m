@@ -669,12 +669,22 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
 #pragma mark - Private: Tapping
 
 -(void)_didTapOnInActiveControlViewWithIndex:(NSUInteger)index {
-    //set active
-    self.myActiveIndex = index;
+    //by default we should show it...
+    BOOL shouldShow = YES;
+    //...but lets give the delegate a chance to say no
+    if ([self.delegate respondsToSelector:@selector(tabBar:shouldShowViewController:forControlView:withIndex:)]) {
+        shouldShow = [self.delegate tabBar:self shouldShowViewController:self.viewControllers[index] forControlView:self.controlViews[index] withIndex:index];
+    }
     
-    //tell delegate about tap
-    if ([self.delegate respondsToSelector:@selector(tabBar:didTapOnControlViewWithIndex:controlView:)]) {
-        [self.delegate tabBar:self didTapOnControlViewWithIndex:index controlView:self.controlViews[index]];
+    //do the showing if necessary
+    if (shouldShow) {
+        //set active
+        self.myActiveIndex = index;
+        
+        //tell delegate about tap
+        if ([self.delegate respondsToSelector:@selector(tabBar:didTapOnControlViewWithIndex:controlView:)]) {
+            [self.delegate tabBar:self didTapOnControlViewWithIndex:index controlView:self.controlViews[index]];
+        }
     }
 }
 

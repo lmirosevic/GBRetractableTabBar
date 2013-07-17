@@ -141,6 +141,9 @@ typedef enum {
 -(void)tabBarDidHideTabBar:(GBRetractableTabBar *)tabBar animated:(BOOL)animated;
 -(void)tabBarDidShowTabBar:(GBRetractableTabBar *)tabBar animated:(BOOL)animated;
 
+//Lets the delegate decide whether it's OK to show the VC
+-(BOOL)tabBar:(GBRetractableTabBar *)tabBar shouldShowViewController:(UIViewController *)viewController forControlView:(UIView<GBRetractableTabBarControlView> *)controlView withIndex:(NSUInteger)index;
+
 @end
 
 //adds some features for interacting with the UINavigationController
