@@ -98,7 +98,7 @@ typedef enum {
 -(void)setBarBackgroundView:(UIView *)barBackgroundView;
 -(UIView *)barBackgroundView;
 
-//Convenience setter that saves you from creating your own UIImageView
+//Convenience setter for creating a backgroundView out of an image, stretches it to fill the width, and sets the height to the barHeight
 -(void)setBarBackgroundImage:(UIImage *)barBackgroundImage;
 //Returns the UIImage used to create the bg
 -(UIImage *)barBackgroundImage;

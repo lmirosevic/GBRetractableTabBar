@@ -297,7 +297,7 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
         for (UIView *view in controlViews) {
             totalWidth += view.frame.size.width;
         }
-
+        
         CGFloat leftMargin;
         CGFloat collapsibleHorizontalMargin;
         
@@ -488,7 +488,8 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
 
 -(void)setBarBackgroundImage:(UIImage *)barBackgroundImage {
     if (barBackgroundImage) {
-        UIImageView *imageView = [[UIImageView alloc] initWithImage:barBackgroundImage];
+        UIImageView *imageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 0, self.barHeight)];
+        imageView.image = barBackgroundImage;
         
         [self setBarBackgroundView:imageView];
         
@@ -505,7 +506,7 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
 -(void)_configureBarBackgroundView {
     if (self.barBackgroundView) {
         //set it's frame
-        self.barBackgroundView.frame = CGRectMake(0, self.barHeight - self.barBackgroundView.frame.size.height, self.barView.bounds.size.width, self.barBackgroundView.frame.size.height);
+        self.barBackgroundView.frame = CGRectMake(self.barView.bounds.origin.x, self.barView.bounds.origin.y + self.barHeight - self.barBackgroundView.frame.size.height, self.barView.bounds.size.width - self.barView.bounds.origin.x, self.barBackgroundView.frame.size.height);
         
         //make sure it stretches to the width and keeps it's height and is pinned to the bottom
         self.barBackgroundView.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleWidth;
