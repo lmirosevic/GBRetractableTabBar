@@ -8,7 +8,7 @@
 
 #import "GBRetractableTabBar.h"
 
-//if you make your GBRetractableTabBar instance a delegte of UINavigationController, then it can handle some stuff like hiding the bar
+//if you make your GBRetractableTabBar a delegate of UINavigationController, then it can handle some stuff like hiding the bar
 @interface GBRetractableTabBar (UINavigationController) <UINavigationControllerDelegate>
 
 @property (assign, nonatomic) BOOL      shouldRestoreBarWhenNavigating;

@@ -8,39 +8,63 @@
 
 #import "GBRetractableTabBar.h"
 
-#import "GBToolbox.h"
+#import <GBToolbox/GBToolbox.h>
 
 static GBRetractableTabBarContentResizingMode const kDefaultResizingMode =                          GBRetractableTabBarContentResizingModeAutomaticallyAdjustHeight;
 static BOOL const kDefaultShouldPopToRootOnNavigationControllerWhenTappingActiveControlView =       YES;
 
+@interface GBRetractableTabBarContentView : UIView
+
+@property (weak, nonatomic) GBRetractableTabBar                                                     *owningRetractableTabBar;
+
+@end
+
+@implementation GBRetractableTabBarContentView
+@end
 
 @interface UIViewController ()
 
 @property (weak, nonatomic, readwrite) GBRetractableTabBar                                          *retractableTabBar;
 
-@property (strong, nonatomic) NSNumber                                                              *retractableTabBarResizingModeNumber;
 @property (assign, nonatomic) GBRetractableTabBarContentResizingMode                                retractableTabBarResizingMode;
 
 @end
 
 @implementation UIViewController (GBRetractableTabBar)
 
-_associatedObject(weak, nonatomic, GBRetractableTabBar *, retractableTabBar, setRetractableTabBar)
+#pragma mark - Storage
 
-_associatedObject(strong, nonatomic, NSNumber *, retractableTabBarResizingModeNumber, setRetractableTabBarResizingModeNumber)
+_associatedObject(weak, nonatomic, GBRetractableTabBar *, retractableTabBar, setRetractableTabBar)
+_associatedObject(strong, nonatomic, NSNumber *, _retractableTabBarResizingMode, _setRetractableTabBarResizingMode)
 
 -(GBRetractableTabBarContentResizingMode)retractableTabBarResizingMode {
-    NSNumber *resizingModeNumber = self.retractableTabBarResizingModeNumber;
-    if (resizingModeNumber) {
-        return (GBRetractableTabBarContentResizingMode)resizingModeNumber.intValue;
-    }
-    else {
-        return kDefaultResizingMode;
-    }
+    return [self _retractableTabBarResizingMode] ? [self _retractableTabBarResizingMode].intValue : kDefaultResizingMode;
 }
 
 -(void)setRetractableTabBarResizingMode:(GBRetractableTabBarContentResizingMode)retractableTabBarResizingMode {
-    self.retractableTabBarResizingModeNumber = @(retractableTabBarResizingMode);
+    [self _setRetractableTabBarResizingMode:@(retractableTabBarResizingMode)];
+}
+
+#pragma mark - API
+
+-(GBRetractableTabBar *)containingRetractableTabBar {
+    //go up the view hierarchy until you find a retractable tab bar
+    UIView *view = self.view;
+    UIView *parent;
+    while (YES) {
+        if ((parent = view.superview)) {
+            //check if the current parent is a GBRetractableTabBarContentView
+            if ([parent isKindOfClass:GBRetractableTabBarContentView.class]) {
+                return ((GBRetractableTabBarContentView *)parent).owningRetractableTabBar;
+            }
+            
+            //go one up
+            view = parent;
+        }
+        else {
+            return nil;
+        }
+    }
 }
 
 @end
@@ -58,7 +82,7 @@ static GBRetractableTabBarLayoutStyle const kGBRetractableTabBarDefaultLayoutSty
     BOOL                                                                                            _isShowing;
 }
 
-@property (strong, nonatomic) UIView                                                                *contentView;
+@property (strong, nonatomic) GBRetractableTabBarContentView                                        *contentView;
 @property (strong, nonatomic) UIView                                                                *barView;
 @property (strong, nonatomic) UIView                                                                *controlViewsContainer;
 
@@ -91,9 +115,10 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
 }
 
 //Create the contentview lazily
--(UIView *)contentView {
+-(GBRetractableTabBarContentView *)contentView {
     if (!_contentView) {
-        _contentView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, self.view.bounds.size.height - self.barHeight)];
+        _contentView = [[GBRetractableTabBarContentView alloc] initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, self.view.bounds.size.height - self.barHeight)];
+        _contentView.owningRetractableTabBar = self;
         _contentView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
         [self.view addSubview:_contentView];
         [self.view sendSubviewToBack:_contentView];
@@ -402,23 +427,23 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
     //check if we have a change
     if (newActiveViewController != self.activeViewController) {
         //hide the old one
-        [self hideViewController:self.activeViewController];
+        [self _hideViewController:self.activeViewController];
         
         //show the new one
-        [self showViewController:newActiveViewController];
+        [self _showViewController:newActiveViewController];
         
         //remember who is active
         self.activeViewController = newActiveViewController;
     }
 }
 
--(void)hideViewController:(UIViewController *)viewController {
+-(void)_hideViewController:(UIViewController *)viewController {
     if (viewController) {
         [viewController.view removeFromSuperview];
     }
 }
 
--(void)showViewController:(UIViewController *)viewController {
+-(void)_showViewController:(UIViewController *)viewController {
     if (viewController) {
         viewController.view.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
         viewController.view.frame = self.contentView.bounds;

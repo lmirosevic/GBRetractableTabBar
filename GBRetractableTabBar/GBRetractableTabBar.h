@@ -13,18 +13,6 @@
 
 extern NSUInteger const kGBRetractableTabBarUndefinedIndex;
 
-@class GBRetractableTabBar;
-
-@interface UIViewController (GBRetractableTabBar)
-
-@property (weak, nonatomic, readonly) GBRetractableTabBar                   *retractableTabBar;
-
-@end
-
-
-@protocol GBRetractableTabBarControlView;
-@protocol GBRetractableTabBarDelegate;
-
 typedef enum {
     GBRetractableTabBarLayoutStyleSpread,
     GBRetractableTabBarLayoutStyleBunched,
@@ -34,6 +22,18 @@ typedef enum {
     GBRetractableTabBarContentResizingModeAutomaticallyAdjustHeight,
     GBRetractableTabBarContentResizingModeFixedFullHeight,
 } GBRetractableTabBarContentResizingMode;
+
+@class GBRetractableTabBar;
+
+@interface UIViewController (GBRetractableTabBar)
+
+@property (weak, nonatomic, readonly) GBRetractableTabBar                   *retractableTabBar;
+@property (weak, nonatomic, readonly) GBRetractableTabBar                   *containingRetractableTabBar;
+
+@end
+
+@protocol GBRetractableTabBarControlView;
+@protocol GBRetractableTabBarDelegate;
 
 @interface GBRetractableTabBar : UIViewController
 
