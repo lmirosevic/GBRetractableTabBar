@@ -10,8 +10,6 @@
 
 #import <objc/runtime.h>
 
-static BOOL const kDefaultShouldRestoreBarWhenNavigating = YES;
-
 @implementation GBRetractableTabBar (UINavigationController)
 
 #pragma mark - ca
