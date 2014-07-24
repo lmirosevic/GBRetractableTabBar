@@ -94,6 +94,8 @@ static GBRetractableTabBarLayoutStyle const kGBRetractableTabBarDefaultLayoutSty
 
 @property (strong, nonatomic) UITapGestureRecognizer                                                *tapGestureRecognizer;
 
+@property (assign, nonatomic) BOOL                                                                  performsShowAnimation;
+
 @end
 
 @implementation GBRetractableTabBar
@@ -610,15 +612,19 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
 
 -(void)show:(BOOL)shouldShowBar animated:(BOOL)shouldAnimate {
     //if it changed
-    if (shouldShowBar != _isShowing) {
+    if ( !_performsShowAnimation && shouldShowBar != _isShowing) {
+        _performsShowAnimation = shouldAnimate;
         //property changes
         VoidBlock animations = ^{
+            self.barView.hidden = NO;
             [self _handleGeometryShowing:shouldShowBar];
         };
         
         //once they've been changed, call this
         VoidBlock completion = ^{
             _isShowing = shouldShowBar;
+            self.barView.hidden = !shouldShowBar;
+            _performsShowAnimation = NO;
             
             //tell our delegate
             if (shouldShowBar) {
