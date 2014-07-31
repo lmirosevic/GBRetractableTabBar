@@ -50,6 +50,7 @@ typedef enum {
 @property (strong, nonatomic, readonly) UIViewController                    *activeViewController;
 @property (assign, nonatomic) NSUInteger                                    activeIndex;
 @property (assign, nonatomic, readonly) NSUInteger                          previousActiveIndex;
+@property (assign, nonatomic) BOOL                                          shouldHideOverflowContentWhenRetracted;
 
 #pragma mark - Init
 

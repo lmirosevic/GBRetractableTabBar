@@ -94,8 +94,6 @@ static GBRetractableTabBarLayoutStyle const kGBRetractableTabBarDefaultLayoutSty
 
 @property (strong, nonatomic) UITapGestureRecognizer                                                *tapGestureRecognizer;
 
-@property (assign, nonatomic) BOOL                                                                  performsShowAnimation;
-
 @end
 
 @implementation GBRetractableTabBar
@@ -612,19 +610,21 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
 
 -(void)show:(BOOL)shouldShowBar animated:(BOOL)shouldAnimate {
     //if it changed
-    if ( !_performsShowAnimation && shouldShowBar != _isShowing) {
-        _performsShowAnimation = shouldAnimate;
+    if (shouldShowBar != _isShowing) {
+        _isShowing = shouldShowBar;
+        
         //property changes
         VoidBlock animations = ^{
+            
             self.barView.hidden = NO;
             [self _handleGeometryShowing:shouldShowBar];
         };
         
         //once they've been changed, call this
-        VoidBlock completion = ^{
-            _isShowing = shouldShowBar;
-            self.barView.hidden = !shouldShowBar;
-            _performsShowAnimation = NO;
+        VoidBlockBool completion = ^(BOOL finished){
+            if(finished) {
+                self.barView.hidden = !shouldShowBar && self.shouldHideOverflowContentWhenRetracted;
+            }
             
             //tell our delegate
             if (shouldShowBar) {
@@ -639,18 +639,17 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
             }
         };
         
-        
         //do the actual changes
         if (shouldAnimate) {
-            [UIView animateWithDuration:kGBRetractableBarAnimationDuration animations:^{
+            [UIView animateWithDuration:kGBRetractableBarAnimationDuration delay:0.0 options:UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionCurveEaseInOut animations:^{
                 animations();
             } completion:^(BOOL finished) {
-                completion();
+                completion(finished);
             }];
         }
         else {
             animations();
-            completion();
+            completion(YES);
         }
     }
 }
