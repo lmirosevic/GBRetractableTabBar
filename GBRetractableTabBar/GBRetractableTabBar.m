@@ -72,7 +72,8 @@ _associatedObject(strong, nonatomic, NSNumber *, _retractableTabBarResizingMode,
 
 NSUInteger const kGBRetractableTabBarUndefinedIndex =                                               NSUIntegerMax;
 
-static CGFloat const kGBRetractableBarAnimationDuration =                                           0.3;
+static CGFloat const kGBRetractableBarAnimationDuration =                                           0.25;
+static CGFloat const kGBRetractableBarOverflowAnimationDuration =                                   0.05;
 static GBRetractableTabBarLayoutStyle const kGBRetractableTabBarDefaultLayoutStyle =                GBRetractableTabBarLayoutStyleSpread;
 
 @interface GBRetractableTabBar () {
@@ -188,36 +189,36 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
         //we'll need to remember this for later
         UIViewController *oldViewController = self.activeViewController;
         
-        
+
         //fist handle the internal stuff
-            //view controllers
-            [self _sortOutViewControllers];
-            
-            //control views
-            [self _activateCorrectControlView];
+        //view controllers
+        [self _sortOutViewControllers];
         
-            //handle the geometry (some contentVCs might have different resizing settings
-            [self _handleGeometryShowing:self.isShowing];
+        //control views
+        [self _activateCorrectControlView];
+        
+        //handle the geometry (some contentVCs might have different resizing settings
+        [self _handleGeometryShowing:self.isShowing animated:NO completion:nil];
         
         
         //now tell our delegate what happenend
-            //index
-            if ([self.delegate respondsToSelector:@selector(tabBar:didChangeActiveIndexFromOldIndex:toNewIndex:)]) {
-                [self.delegate tabBar:self didChangeActiveIndexFromOldIndex:oldIndex toNewIndex:newIndex];
-            }
-            
-            //view controllers
-            if ([self.delegate respondsToSelector:@selector(tabBar:didHideViewControllerWithIndex:viewController:)]) {
-                [self.delegate tabBar:self didHideViewControllerWithIndex:oldIndex viewController:oldViewController];
-            }
-            if ([self.delegate respondsToSelector:@selector(tabBar:didShowViewControllerWithIndex:viewController:)]) {
-                [self.delegate tabBar:self didShowViewControllerWithIndex:newIndex viewController:self.activeViewController];
-            }
-            
-            //joint
-            if ([self.delegate respondsToSelector:@selector(tabBar:didReplaceViewControllerWithOldIndex:oldViewController:withViewControllerWithNewIndex:newViewController:)]) {
-                [self.delegate tabBar:self didReplaceViewControllerWithOldIndex:oldIndex oldViewController:oldViewController withViewControllerWithNewIndex:newIndex newViewController:self.activeViewController];
-            }
+        //index
+        if ([self.delegate respondsToSelector:@selector(tabBar:didChangeActiveIndexFromOldIndex:toNewIndex:)]) {
+            [self.delegate tabBar:self didChangeActiveIndexFromOldIndex:oldIndex toNewIndex:newIndex];
+        }
+        
+        //view controllers
+        if ([self.delegate respondsToSelector:@selector(tabBar:didHideViewControllerWithIndex:viewController:)]) {
+            [self.delegate tabBar:self didHideViewControllerWithIndex:oldIndex viewController:oldViewController];
+        }
+        if ([self.delegate respondsToSelector:@selector(tabBar:didShowViewControllerWithIndex:viewController:)]) {
+            [self.delegate tabBar:self didShowViewControllerWithIndex:newIndex viewController:self.activeViewController];
+        }
+        
+        //joint
+        if ([self.delegate respondsToSelector:@selector(tabBar:didReplaceViewControllerWithOldIndex:oldViewController:withViewControllerWithNewIndex:newViewController:)]) {
+            [self.delegate tabBar:self didReplaceViewControllerWithOldIndex:oldIndex oldViewController:oldViewController withViewControllerWithNewIndex:newIndex newViewController:self.activeViewController];
+        }
     }
 }
 
@@ -540,9 +541,13 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
 
 #pragma mark - Private API: Retracting
 
--(void)_handleGeometryShowing:(BOOL)shouldShowBar {
+-(void)_handleGeometryShowing:(BOOL)shouldShowBar animated:(BOOL)animated completion:(VoidBlock)completion {
+    //animation consists of 2 parts:
+    //one parts takes into account only barHeight
+    //the other one takes into account only barOverflowDistance
     CGRect contentViewTargetFrame;
     CGRect barViewTargetFrame;
+    CGRect barViewTargetOverflowFrame;
     
     CGRect barShownTargetFrame = CGRectMake(0,
                                             self.view.bounds.size.height - self.barHeight,
@@ -550,6 +555,11 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
                                             self.barHeight);
     
     CGRect barHiddenTargetFrame = CGRectMake(0,
+                                             self.view.bounds.size.height,
+                                             self.view.bounds.size.width,
+                                             self.barHeight);
+    
+    CGRect barHiddenTargetOverflowFrame = CGRectMake(0,
                                              self.view.bounds.size.height + self.barOverflowDistance,
                                              self.view.bounds.size.width,
                                              self.barHeight);
@@ -557,7 +567,7 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
     CGRect contentViewFullHeightTargetFrame = CGRectMake(0,
                                                          0,
                                                          self.view.bounds.size.width,
-                                                         self.view.bounds.size.height + self.barOverflowDistance);
+                                                         self.view.bounds.size.height);
     
     CGRect contentViewMinusBarHeightTargetFrame = CGRectMake(0,
                                                              0,
@@ -568,10 +578,12 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
     if (shouldShowBar) {
         //barview goes up
         barViewTargetFrame = barShownTargetFrame;
+        barViewTargetOverflowFrame = barHiddenTargetFrame;
     }
     else {
         //barview goes down
         barViewTargetFrame = barHiddenTargetFrame;
+        barViewTargetOverflowFrame = barHiddenTargetOverflowFrame;
     }
     
     //sort out content view sizing
@@ -593,9 +605,45 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
         contentViewTargetFrame = contentViewFullHeightTargetFrame;
     }
     
-    //do the actual property changes
-    self.contentView.frame = contentViewTargetFrame;
-    self.barView.frame = barViewTargetFrame;
+    VoidBlock heightAnimations = ^{
+        self.contentView.frame = contentViewTargetFrame;
+        self.barView.frame = barViewTargetFrame;
+    };
+    
+    VoidBlock overflowAnimations = ^{
+        self.contentView.frame = contentViewFullHeightTargetFrame;
+        self.barView.frame = barViewTargetOverflowFrame;
+    };
+    
+    CGFloat firstAnimationDuration = !shouldShowBar ? kGBRetractableBarAnimationDuration : kGBRetractableBarOverflowAnimationDuration;
+    CGFloat secondAnimationDuration = shouldShowBar ? kGBRetractableBarAnimationDuration : kGBRetractableBarOverflowAnimationDuration;
+    VoidBlock firstAnimations = !shouldShowBar ? heightAnimations : overflowAnimations;
+    VoidBlock secondAnimations = shouldShowBar ? heightAnimations : overflowAnimations;
+    
+    if (animated) {
+        //perform first animations
+        [UIView animateWithDuration:firstAnimationDuration delay:0.0 options:UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionCurveEaseIn animations:^{
+            firstAnimations();
+        } completion:^(BOOL finished) {
+            if(finished) {
+                //perform second animatoins
+                [UIView animateWithDuration:secondAnimationDuration delay:0.0 options:UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionCurveEaseOut animations:^{
+                    secondAnimations();
+                } completion:^(BOOL finished){
+                    if(completion && finished) {
+                        completion();
+                    }
+                }];
+            }
+        }];
+    }
+    else {
+        firstAnimations();
+        secondAnimations();
+        if(completion) {
+            completion();
+        }
+    }
 }
 
 #pragma mark - Retracting
@@ -612,19 +660,11 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
     //if it changed
     if (shouldShowBar != _isShowing) {
         _isShowing = shouldShowBar;
+        self.barView.hidden = NO;
         
-        //property changes
-        VoidBlock animations = ^{
-            
-            self.barView.hidden = NO;
-            [self _handleGeometryShowing:shouldShowBar];
-        };
-        
-        //once they've been changed, call this
-        VoidBlockBool completion = ^(BOOL finished){
-            if(finished) {
-                self.barView.hidden = !shouldShowBar && self.shouldHideOverflowContentWhenRetracted;
-            }
+        //after all animations are perfomed call delegates methods
+        [self _handleGeometryShowing:shouldShowBar animated:shouldAnimate completion:^{
+            self.barView.hidden = !shouldShowBar && self.shouldHideOverflowContentWhenRetracted;
             
             //tell our delegate
             if (shouldShowBar) {
@@ -637,20 +677,7 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
                     [self.delegate tabBarDidHideTabBar:self animated:shouldAnimate];
                 }
             }
-        };
-        
-        //do the actual changes
-        if (shouldAnimate) {
-            [UIView animateWithDuration:kGBRetractableBarAnimationDuration delay:0.0 options:UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionCurveEaseInOut animations:^{
-                animations();
-            } completion:^(BOOL finished) {
-                completion(finished);
-            }];
-        }
-        else {
-            animations();
-            completion(YES);
-        }
+        }];
     }
 }
 
@@ -663,7 +690,7 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
     viewController.retractableTabBarResizingMode = contentResizingMode;
     
     //this relays out the contentview, without animating, so the settings is applied immediately
-    [self _handleGeometryShowing:self.isShowing];
+    [self _handleGeometryShowing:self.isShowing animated:NO completion:nil];
 }
 
 #pragma mark - Tap gesture recognizer
