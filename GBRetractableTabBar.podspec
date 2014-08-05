@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name         = "GBRetractableTabBar"
-  s.version      = "1.1.1"
+  s.version      = "1.2.0"
   s.summary      = "iOS Control for a retractable tab bar that supports full customisation in terms of sizing, behaviour, and custom views."
   s.homepage     = "https://github.com/lmirosevic/GBRetractableTabBar"
   s.license      = 'Apache License, Version 2.0'
