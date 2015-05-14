@@ -440,15 +440,21 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
 
 -(void)_hideViewController:(UIViewController *)viewController {
     if (viewController) {
+        [viewController willMoveToParentViewController:nil];
         [viewController.view removeFromSuperview];
+        [viewController removeFromParentViewController];
     }
 }
 
 -(void)_showViewController:(UIViewController *)viewController {
     if (viewController) {
+        [self addChildViewController:viewController];
+        
         viewController.view.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
         viewController.view.frame = self.contentView.bounds;
         [self.contentView addSubview:viewController.view];
+        
+        [viewController didMoveToParentViewController:self];
     }
 }
 
