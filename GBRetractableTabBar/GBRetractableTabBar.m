@@ -72,8 +72,8 @@ _associatedObject(strong, nonatomic, NSNumber *, _retractableTabBarResizingMode,
 
 NSUInteger const kGBRetractableTabBarUndefinedIndex =                                               NSUIntegerMax;
 
-static CGFloat const kGBRetractableBarAnimationDuration =                                           0.25;
-static CGFloat const kGBRetractableBarOverflowAnimationDuration =                                   0.05;
+static NSTimeInterval const kGBRetractableBarAnimationDuration =                                    0.25;
+static NSTimeInterval const kGBRetractableBarOverflowAnimationDuration =                            0.05;
 static GBRetractableTabBarLayoutStyle const kGBRetractableTabBarDefaultLayoutStyle =                GBRetractableTabBarLayoutStyleSpread;
 
 @interface GBRetractableTabBar () {
@@ -627,19 +627,22 @@ _lazy(NSMutableArray, myViewControllers, _myViewControllers)
     VoidBlock secondAnimations = shouldShowBar ? heightAnimations : overflowAnimations;
     
     if (animated) {
-        //perform first animations
-        [UIView animateWithDuration:firstAnimationDuration delay:0.0 options:UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionCurveEaseIn animations:^{
-            firstAnimations();
+        NSTimeInterval fullAnimationDuration = firstAnimationDuration + secondAnimationDuration;
+        NSTimeInterval firstAnimationRelativeDuration = firstAnimationDuration / fullAnimationDuration;
+        NSTimeInterval secondAnimationRelativeDuration = secondAnimationDuration / fullAnimationDuration;
+
+        [UIView animateKeyframesWithDuration:fullAnimationDuration delay:0.0 options:UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionCurveEaseInOut animations:^{
+            //first animation keyframe
+            [UIView addKeyframeWithRelativeStartTime:0.0 relativeDuration:firstAnimationRelativeDuration animations:^{
+                firstAnimations();
+            }];
+            //second animation keyframe
+            [UIView addKeyframeWithRelativeStartTime:firstAnimationRelativeDuration relativeDuration:secondAnimationRelativeDuration animations:^{
+                secondAnimations();
+            }];
         } completion:^(BOOL finished) {
-            if(finished) {
-                //perform second animatoins
-                [UIView animateWithDuration:secondAnimationDuration delay:0.0 options:UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionCurveEaseOut animations:^{
-                    secondAnimations();
-                } completion:^(BOOL finished){
-                    if(completion && finished) {
-                        completion();
-                    }
-                }];
+            if(completion && finished) {
+                completion();
             }
         }];
     }
